@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 
 export default function Home() {
   // Timer state
@@ -9,8 +9,6 @@ export default function Home() {
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [hasStarted, setHasStarted] = useState<boolean>(false);
-  const [halfTimeTriggered, setHalfTimeTriggered] = useState<boolean>(false);
-  const [completionTriggered, setCompletionTriggered] = useState<boolean>(false);
   const [isResetting, setIsResetting] = useState<boolean>(false);
 
   // Audio refs
@@ -18,8 +16,10 @@ export default function Home() {
   const completionAudioRef = useRef<HTMLAudioElement | null>(null);
 
   // Timer refs
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [totalTime, setTotalTime] = useState<number>(0);
   const totalTimeRef = useRef<number>(0);
+  const halfTimeTriggeredRef = useRef<boolean>(false);
+  const completionTriggeredRef = useRef<boolean>(false);
 
   // Completion sound length (starts 4 seconds before end)
   const COMPLETION_SOUND_LEAD_TIME = 4;
@@ -34,25 +34,29 @@ export default function Home() {
 
   // Calculate progress percentage (elapsed time - width increases as timer runs)
   const getProgress = (): number => {
-    if (!hasStarted || totalTimeRef.current <= 0) return 0;
-    const elapsed = totalTimeRef.current - timeLeft;
-    const progress = (elapsed / totalTimeRef.current) * 100;
+    if (!hasStarted || totalTime <= 0) return 0;
+    const elapsed = totalTime - timeLeft;
+    const progress = (elapsed / totalTime) * 100;
     return Math.max(0, Math.min(100, progress));
   };
 
   // Start timer
-  const startTimer = useCallback(() => {
-    if (!hasStarted) {
+  const startTimer = () => {
+    console.log("startTimer called", { hasStarted, timeLeft, minutes, seconds });
+    if (!hasStarted || timeLeft <= 0) {
       const total = minutes * 60 + seconds;
+      console.log("Initializing timer with total:", total);
       if (total <= 0) return;
+      setTotalTime(total);
       totalTimeRef.current = total;
       setTimeLeft(total);
       setHasStarted(true);
-      setHalfTimeTriggered(false);
-      setCompletionTriggered(false);
+      halfTimeTriggeredRef.current = false;
+      completionTriggeredRef.current = false;
     }
+    console.log("Setting isRunning to true");
     setIsRunning(true);
-  }, [hasStarted, minutes, seconds]);
+  };
 
   // Pause timer
   const pauseTimer = () => {
@@ -64,14 +68,12 @@ export default function Home() {
     setIsResetting(true);
     setIsRunning(false);
     setHasStarted(false);
-    setHalfTimeTriggered(false);
-    setCompletionTriggered(false);
     setTimeLeft(0);
+    setTotalTime(0);
     totalTimeRef.current = 0;
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
+    halfTimeTriggeredRef.current = false;
+    completionTriggeredRef.current = false;
+
     // Stop any playing audio
     if (halfTimeAudioRef.current) {
       halfTimeAudioRef.current.pause();
@@ -90,49 +92,59 @@ export default function Home() {
 
   // Timer effect
   useEffect(() => {
-    if (isRunning && timeLeft > 0) {
-      intervalRef.current = setInterval(() => {
+    let interval: NodeJS.Timeout | null = null;
+
+    if (isRunning) {
+      console.log("Starting interval");
+      interval = setInterval(() => {
         setTimeLeft((prev) => {
-          const newTime = Math.max(0, prev - 1);
-
-          // Check for half time (only if total time > 1 second)
-          const halfTime = Math.floor(totalTimeRef.current / 2);
-          if (newTime === halfTime && !halfTimeTriggered && halfTime > 0 && totalTimeRef.current > 1) {
-            setHalfTimeTriggered(true);
-            halfTimeAudioRef.current?.play().catch(() => { });
-          }
-
-          // Check for completion sound (8 seconds before end, or skip if timer too short)
-          if (newTime === COMPLETION_SOUND_LEAD_TIME && !completionTriggered && totalTimeRef.current > COMPLETION_SOUND_LEAD_TIME) {
-            setCompletionTriggered(true);
-            completionAudioRef.current?.play().catch(() => { });
-          }
-
-          // Stop timer at 0
-          if (newTime <= 0) {
+          if (prev <= 1) {
+            console.log("Timer hit zero in interval");
             setIsRunning(false);
-            // If timer was shorter than 8 seconds, play completion sound now
-            if (!completionTriggered) {
-              setCompletionTriggered(true);
-              completionAudioRef.current?.play().catch(() => { });
-            }
             return 0;
           }
-
-          return newTime;
+          return prev - 1;
         });
       }, 1000);
     }
 
     return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
+      if (interval) {
+        console.log("Clearing interval");
+        clearInterval(interval);
       }
     };
-  }, [isRunning, halfTimeTriggered, completionTriggered, timeLeft]);
+  }, [isRunning]);
 
-  // Handle input changes
+  // Handle checkpoint triggers (audio) without stopping logic
+  useEffect(() => {
+    if (!isRunning || !hasStarted) return;
+
+    // Check for other triggers
+    const currentTotal = totalTimeRef.current;
+    if (currentTotal > 0) {
+      // Check for half time
+      const halfTime = Math.floor(currentTotal / 2);
+      if (timeLeft === halfTime && !halfTimeTriggeredRef.current && halfTime > 0 && currentTotal > 1) {
+        halfTimeTriggeredRef.current = true;
+        halfTimeAudioRef.current?.play().catch((err) => console.error("Audio error:", err));
+      }
+
+      // Check for completion sound (starts before end)
+      if (timeLeft === COMPLETION_SOUND_LEAD_TIME && !completionTriggeredRef.current && currentTotal > COMPLETION_SOUND_LEAD_TIME) {
+        completionTriggeredRef.current = true;
+        completionAudioRef.current?.play().catch((err) => console.error("Audio error:", err));
+      }
+
+      // Final completion audio (at 0)
+      if (timeLeft === 0 && !completionTriggeredRef.current) {
+        completionTriggeredRef.current = true;
+        completionAudioRef.current?.play().catch((err) => console.error("Audio error:", err));
+      }
+    }
+  }, [timeLeft, isRunning, hasStarted]);
+
+  // Handle minutes/seconds changes
   const handleMinutesChange = (value: string) => {
     const num = parseInt(value) || 0;
     setMinutes(Math.max(0, Math.min(99, num)));
@@ -203,7 +215,7 @@ export default function Home() {
               disabled={!hasStarted && minutes === 0 && seconds === 0}
               className="btn btn-primary"
             >
-              {hasStarted ? "Resume" : "Start"}
+              {hasStarted && timeLeft > 0 ? "Resume" : "Start"}
             </button>
           ) : (
             <button
