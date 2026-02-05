@@ -5,7 +5,7 @@ A simple countdown timer app with half-time and completion sound alerts.
 ## Features
 
 - User-configurable countdown time (minutes and seconds)
-- Visual progress ring indicator
+- Immersive background progress indicator
 - Half-time sound alert
 - Completion sound alert
 - Start, Pause, Resume, and Reset controls

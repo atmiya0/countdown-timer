@@ -134,7 +134,18 @@ export default function Home() {
       halfTimeAudioRef.current?.play().catch(() => { });
     }
 
-    // Zero reaching alert
+    // Completion sound alert (starts 3 seconds early)
+    const COMPLETION_SOUND_LEAD_TIME = 3;
+    if (
+      !completionTriggeredRef.current &&
+      previousTimeLeftRef.current > COMPLETION_SOUND_LEAD_TIME &&
+      timeLeft <= COMPLETION_SOUND_LEAD_TIME
+    ) {
+      completionTriggeredRef.current = true;
+      completionAudioRef.current?.play().catch(() => { });
+    }
+
+    // Zero reaching fallback (in case timer is very short)
     if (timeLeft === 0 && !completionTriggeredRef.current) {
       completionTriggeredRef.current = true;
       completionAudioRef.current?.play().catch(() => { });
@@ -155,8 +166,7 @@ export default function Home() {
   };
 
   return (
-    <main className="app-container">
-      {/* Background Progress Bar - Wrapped inside container for better z-index control */}
+    <>
       <div
         className="progress-bar-background"
         style={{
@@ -164,86 +174,88 @@ export default function Home() {
           transition: isResetting ? "width 2s ease-in-out" : "width 1s linear"
         }}
       />
+      <main className="app-container">
 
-      {/* Audio elements */}
-      <audio ref={halfTimeAudioRef} src="/sounds/halftime-sound.mp3" preload="auto" />
-      <audio ref={completionAudioRef} src="/sounds/completion-sound.mp3" preload="auto" />
+        {/* Audio elements */}
+        <audio ref={halfTimeAudioRef} src="/sounds/halftime-sound.mp3" preload="auto" />
+        <audio ref={completionAudioRef} src="/sounds/completion-sound.mp3" preload="auto" />
 
-      {/* Timer Display */}
-      <div className="timer-section">
-        <span className="timer-display">
-          {hasStarted ? formatTime(timeLeft) : formatTime(minutes * 60 + seconds)}
-        </span>
-      </div>
-
-      {/* Time Input (only show when not started) */}
-      {!hasStarted && (
-        <div className="input-section">
-          <div className="input-group">
-            <label className="input-label">Minutes</label>
-            <input
-              type="number"
-              value={minutes}
-              onChange={(e) => handleMinutesChange(e.target.value)}
-              min="0"
-              max="99"
-              className="time-input"
-            />
-          </div>
-          <span className="input-separator">:</span>
-          <div className="input-group">
-            <label className="input-label">Seconds</label>
-            <input
-              type="number"
-              value={seconds}
-              onChange={(e) => handleSecondsChange(e.target.value)}
-              min="0"
-              max="59"
-              className="time-input"
-            />
-          </div>
+        {/* Timer Display */}
+        <div className="timer-section">
+          <span className="timer-display">
+            {hasStarted ? formatTime(timeLeft) : formatTime(minutes * 60 + seconds)}
+          </span>
         </div>
-      )}
 
-      {/* Controls */}
-      <div className="controls-section">
-        {!isRunning ? (
-          <button
-            onClick={startTimer}
-            disabled={!hasStarted && minutes === 0 && seconds === 0}
-            className="btn btn-primary"
-          >
-            {hasStarted && timeLeft > 0 ? "Resume" : "Start"}
-          </button>
-        ) : (
-          <button onClick={pauseTimer} className="btn btn-secondary">
-            Pause
-          </button>
+        {/* Time Input (only show when not started) */}
+        {!hasStarted && (
+          <div className="input-section">
+            <div className="input-group">
+              <label className="input-label">Minutes</label>
+              <input
+                type="number"
+                value={minutes}
+                onChange={(e) => handleMinutesChange(e.target.value)}
+                min="0"
+                max="99"
+                className="time-input"
+              />
+            </div>
+            <span className="input-separator">:</span>
+            <div className="input-group">
+              <label className="input-label">Seconds</label>
+              <input
+                type="number"
+                value={seconds}
+                onChange={(e) => handleSecondsChange(e.target.value)}
+                min="0"
+                max="59"
+                className="time-input"
+              />
+            </div>
+          </div>
         )}
 
+        {/* Controls */}
+        <div className="controls-section">
+          {!isRunning ? (
+            <button
+              onClick={startTimer}
+              disabled={!hasStarted && minutes === 0 && seconds === 0}
+              className="btn btn-primary"
+            >
+              {hasStarted && timeLeft > 0 ? "Resume" : "Start"}
+            </button>
+          ) : (
+            <button onClick={pauseTimer} className="btn btn-secondary">
+              Pause
+            </button>
+          )}
+
+          {hasStarted && (
+            <button onClick={resetTimer} className="btn btn-secondary">
+              Reset
+            </button>
+          )}
+        </div>
+
+        {/* Status indicator */}
         {hasStarted && (
-          <button onClick={resetTimer} className="btn btn-secondary">
-            Reset
-          </button>
-        )}
-      </div>
-
-      {/* Status indicator */}
-      {hasStarted && (
-        <div className="status-section">
-          <div className="status-indicator">
-            <div className={`status-dot ${isRunning ? "status-running" : timeLeft === 0 ? "status-completed" : "status-paused"}`} />
-            <span className="status-text">
-              {timeLeft === 0 ? "Completed" : isRunning ? "Running" : "Paused"}
-            </span>
+          <div className="status-section">
+            <div className="status-indicator">
+              <div className={`status-dot ${isRunning ? "status-running" : timeLeft === 0 ? "status-completed" : "status-paused"}`} />
+              <span className="status-text">
+                {timeLeft === 0 ? "Completed" : isRunning ? "Running" : "Paused"}
+              </span>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Info */}
-      <div className="info-section">
-        <p>Alerts at half-time and on completion</p>
-      </div>
-    </main>
+        {/* Info */}
+        <div className="info-section">
+          <p>Alerts at half-time and on completion</p>
+        </div>
+      </main>
+    </>
   );
 }

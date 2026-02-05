@@ -50,12 +50,13 @@ body {
 /* ==================== PROGRESS BAR ==================== */
 
 .progress-bar-background {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   bottom: 0;
-  background-color: #d1fae5;
-  z-index: -1;
+  background: linear-gradient(90deg, #ecfdf5 0%, #d1fae5 100%);
+  border-right: 2px solid #10b981;
+  z-index: 0;
   pointer-events: none;
 }
 
