@@ -1,8 +1,11 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import useScreenSize from "@/hooks/use-screen-size";
+import PixelTrail from "@/components/fancy/background/pixel-trail";
 
 export default function Home() {
+  const screenSize = useScreenSize();
   // Timer input state
   const [minutes, setMinutes] = useState<number>(5);
   const [seconds, setSeconds] = useState<number>(0);
@@ -175,6 +178,14 @@ export default function Home() {
         }}
       />
       <main className="app-container">
+        <div className="absolute inset-0 z-[1] overflow-hidden pointer-events-none">
+          <PixelTrail
+            pixelSize={screenSize.lessThan("lg") ? 40 : 64}
+            fadeDuration={800}
+            pixelClassName="bg-emerald-600/30"
+            className="pointer-events-none"
+          />
+        </div>
 
         {/* Audio elements */}
         <audio ref={halfTimeAudioRef} src="/sounds/halftime-sound.mp3" preload="auto" />
