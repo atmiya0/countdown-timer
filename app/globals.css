@@ -134,12 +134,13 @@ body {
   height: 100vh !important;
   height: 100dvh !important;
   margin: 0 !important;
-  padding: 1rem !important;
+  padding: clamp(1rem, 5vh, 4rem) !important;
   display: flex !important;
   flex-direction: column !important;
   justify-content: center !important;
   align-items: center !important;
-  gap: 1.5rem !important;
+  gap: clamp(1rem, 4vh, 3rem) !important;
+  overflow: hidden !important;
 }
 
 /* ==================== TIMER DISPLAY ==================== */
@@ -156,13 +157,14 @@ body {
   font-variant-numeric: tabular-nums !important;
   letter-spacing: -0.02em !important;
   font-weight: 500 !important;
-  /* Lighter weight for modern look at large sizes */
   color: #000000 !important;
-  font-size: clamp(6rem, 22vw, 22rem) !important;
+  /* Scale with both width and height to prevent clipping */
+  font-size: clamp(4rem, min(22vw, 40vh), 25rem) !important;
   line-height: 0.9 !important;
   white-space: nowrap !important;
   display: block !important;
   text-align: center !important;
+  transition: font-size 0.2s ease-out !important;
 }
 
 /* ==================== INPUT SECTION ==================== */
@@ -228,19 +230,22 @@ body {
 .controls-section {
   display: flex !important;
   justify-content: center !important;
-  gap: 1rem !important;
+  gap: clamp(0.5rem, 2vw, 1rem) !important;
   flex-shrink: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
 }
 
 .btn {
-  padding: 1rem 2.5rem !important;
+  padding: clamp(0.75rem, 2vh, 1.25rem) clamp(1.5rem, 5vw, 3rem) !important;
   font-weight: 600 !important;
   border-radius: 0.75rem !important;
   transition: all 0.2s !important;
-  font-size: 1.125rem !important;
+  font-size: clamp(0.875rem, 2vh, 1.25rem) !important;
   cursor: pointer !important;
   border: none !important;
   font-family: inherit !important;
+  white-space: nowrap !important;
 }
 
 .btn-primary {
@@ -366,26 +371,17 @@ input[type="number"] {
 @media (max-width: 480px) {
   .app-container {
     padding: 1rem !important;
-    gap: 1.25rem !important;
+    gap: 1rem !important;
   }
 
   .timer-display {
-    font-size: clamp(4rem, 22vw, 9rem) !important;
+    font-size: clamp(4rem, min(22vw, 40vh), 10rem) !important;
   }
 
   .time-input {
-    width: 4rem !important;
-    height: 3rem !important;
-    font-size: 1.25rem !important;
-  }
-
-  .input-separator {
+    width: 4.5rem !important;
+    height: 3.5rem !important;
     font-size: 1.5rem !important;
-  }
-
-  .btn {
-    padding: 0.75rem 1.5rem !important;
-    font-size: 0.875rem !important;
   }
 }
 
@@ -393,44 +389,15 @@ input[type="number"] {
 
 @media (min-width: 481px) and (max-width: 1023px) {
   .timer-display {
-    font-size: clamp(7rem, 22vw, 16rem) !important;
-  }
-
-  .time-input {
-    width: 5rem !important;
-    height: 3.5rem !important;
-    font-size: 1.5rem !important;
+    font-size: clamp(8rem, min(22vw, 40vh), 18rem) !important;
   }
 }
 
 /* ==================== RESPONSIVE - DESKTOP ==================== */
 
 @media (min-width: 1024px) {
-  .app-container {
-    padding: 2rem !important;
-    gap: 2rem !important;
-  }
-
   .timer-display {
-    font-size: 22rem !important;
-  }
-
-  .time-input {
-    width: 6rem !important;
-    height: 4rem !important;
-    font-size: 1.75rem !important;
-  }
-
-  .input-separator {
-    font-size: 2.5rem !important;
-  }
-
-  .input-section {
-    gap: 1.5rem !important;
-  }
-
-  .btn {
-    padding: 1rem 2.5rem !important;
+    font-size: clamp(12rem, min(22vw, 45vh), 25rem) !important;
   }
 }
 
@@ -438,24 +405,27 @@ input[type="number"] {
 
 @media (max-height: 500px) and (orientation: landscape) {
   .app-container {
-    gap: 0.75rem !important;
     padding: 0.5rem !important;
+    gap: 0.5rem !important;
   }
 
   .timer-display {
-    font-size: 5rem !important;
+    font-size: min(25vw, 60vh) !important;
   }
 
   .time-input {
-    height: 2.5rem !important;
+    height: 3rem !important;
+    width: 4rem !important;
+    font-size: 1.25rem !important;
   }
 
-  .btn {
-    padding: 0.5rem 1rem !important;
+  .input-label {
+    font-size: 0.75rem !important;
+    margin-bottom: 0.25rem !important;
   }
 
-  .info-section {
-    display: none !important;
+  .input-separator {
+    margin-top: 1rem !important;
   }
 }
 
@@ -497,6 +467,7 @@ input[type="number"] {
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }

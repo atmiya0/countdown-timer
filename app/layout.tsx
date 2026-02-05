@@ -17,6 +17,12 @@ const googleSans = Google_Sans({
 export const metadata: Metadata = {
   title: "Countdown Timer",
   description: "A simple countdown timer with half-time and completion alerts",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Countdown Timer",
+  },
 };
 
 export default function RootLayout({

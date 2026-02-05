@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import useScreenSize from "@/hooks/use-screen-size";
 import PixelTrail from "@/components/fancy/background/pixel-trail";
+import confetti from "canvas-confetti";
 
 export default function Home() {
   const screenSize = useScreenSize();
@@ -26,6 +27,7 @@ export default function Home() {
   const previousTimeLeftRef = useRef<number>(0);
   const halfTimeTriggeredRef = useRef<boolean>(false);
   const completionTriggeredRef = useRef<boolean>(false);
+  const confettiTriggeredRef = useRef<boolean>(false);
 
   // Format time for display
   const formatTime = (totalSeconds: number): string => {
@@ -33,6 +35,38 @@ export default function Home() {
     const mins = Math.floor(safeSeconds / 60);
     const secs = safeSeconds % 60;
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  // Confetti trigger
+  const triggerConfetti = () => {
+    const defaults = {
+      spread: 360,
+      ticks: 200,
+      gravity: 0,
+      decay: 0.96,
+      startVelocity: 30,
+      colors: ["#FFE400", "#FFBD00", "#E89400", "#FFCA6C", "#FDFFB8"],
+    };
+
+    const shoot = () => {
+      confetti({
+        ...defaults,
+        particleCount: 40,
+        scalar: 1.2,
+        shapes: ["star"],
+      });
+
+      confetti({
+        ...defaults,
+        particleCount: 10,
+        scalar: 0.75,
+        shapes: ["circle"],
+      });
+    };
+
+    setTimeout(shoot, 0);
+    setTimeout(shoot, 100);
+    setTimeout(shoot, 200);
   };
 
   // Calculate progress percentage
@@ -84,6 +118,7 @@ export default function Home() {
     previousTimeLeftRef.current = 0;
     halfTimeTriggeredRef.current = false;
     completionTriggeredRef.current = false;
+    confettiTriggeredRef.current = false;
 
     // Stop any playing audio
     if (halfTimeAudioRef.current) {
@@ -148,8 +183,14 @@ export default function Home() {
       completionAudioRef.current?.play().catch(() => { });
     }
 
-    // Zero reaching fallback (in case timer is very short)
-    if (timeLeft === 0 && !completionTriggeredRef.current) {
+    // Zero reaching alert - Confetti burst
+    if (timeLeft <= 0 && !confettiTriggeredRef.current) {
+      confettiTriggeredRef.current = true;
+      triggerConfetti();
+    }
+
+    // Zero reaching fallback for audio (in case lead time trigger was missed)
+    if (timeLeft <= 0 && !completionTriggeredRef.current) {
       completionTriggeredRef.current = true;
       completionAudioRef.current?.play().catch(() => { });
     }
