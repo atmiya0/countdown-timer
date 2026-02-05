@@ -15,8 +15,21 @@ const googleSans = Google_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Countdown Timer",
-  description: "A simple countdown timer with half-time and completion alerts",
+  title: "Professional Countdown Timer | Simple, Fast & Offline",
+  description: "A premium, minimalist countdown timer featuring neon aesthetics, half-time alerts, and interactive background effects. Perfect for productivity, workouts, and meetings.",
+  keywords: ["countdown timer", "online timer", "half-time alert", "productivity tool", "minimalist timer", "offline timer", "PWA timer"],
+  authors: [{ name: "Afterone Studio" }],
+  openGraph: {
+    title: "Professional Countdown Timer",
+    description: "Premium minimalist timer with half-time alerts and neon aesthetics.",
+    type: "website",
+    siteName: "Countdown Timer",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Professional Countdown Timer",
+    description: "Premium minimalist timer with half-time alerts and neon aesthetics.",
+  },
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,

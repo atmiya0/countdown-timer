@@ -24,7 +24,7 @@ const PixelTrail: React.FC<PixelTrailProps> = ({
 }) => {
     const containerRef = useRef<HTMLDivElement>(null)
     const dimensions = useDimensions(containerRef)
-    const trailId = useRef(uuidv4())
+    const trailId = useMemo(() => uuidv4(), [])
 
     useEffect(() => {
         const handleMouseMove = (e: MouseEvent) => {
@@ -35,17 +35,17 @@ const PixelTrail: React.FC<PixelTrailProps> = ({
             const y = Math.floor((e.clientY - rect.top) / pixelSize)
 
             const pixelElement = document.getElementById(
-                `${trailId.current}-pixel-${x}-${y}`
+                `${trailId}-pixel-${x}-${y}`
             )
             if (pixelElement) {
-                const animatePixel = (pixelElement as any).__animatePixel
+                const animatePixel = (pixelElement as HTMLElement & { __animatePixel?: () => void }).__animatePixel
                 if (animatePixel) animatePixel()
             }
         }
 
         window.addEventListener("mousemove", handleMouseMove)
         return () => window.removeEventListener("mousemove", handleMouseMove)
-    }, [pixelSize])
+    }, [pixelSize, trailId])
 
     const columns = useMemo(
         () => Math.ceil(dimensions.width / pixelSize),
@@ -69,7 +69,7 @@ const PixelTrail: React.FC<PixelTrailProps> = ({
                     {Array.from({ length: columns }).map((_, colIndex) => (
                         <PixelDot
                             key={`${colIndex}-${rowIndex}`}
-                            id={`${trailId.current}-pixel-${colIndex}-${rowIndex}`}
+                            id={`${trailId}-pixel-${colIndex}-${rowIndex}`}
                             size={pixelSize}
                             fadeDuration={fadeDuration}
                             delay={delay}
@@ -107,7 +107,7 @@ const PixelDot: React.FC<PixelDotProps> = React.memo(
         const ref = useCallback(
             (node: HTMLDivElement | null) => {
                 if (node) {
-                    ; (node as any).__animatePixel = animatePixel
+                    ; (node as HTMLElement & { __animatePixel?: () => void }).__animatePixel = animatePixel
                 }
             },
             [animatePixel]

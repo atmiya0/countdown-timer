@@ -81,6 +81,19 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
+  --animate-ripple: ripple var(--duration, 2s) ease calc(var(--i, 0)*.2s) infinite;
+
+  @keyframes ripple {
+
+    0%,
+    100% {
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    50% {
+      transform: translate(-50%, -50%) scale(0.9);
+    }
+  }
 }
 
 /* ==================== BASE STYLES ==================== */
@@ -109,20 +122,6 @@ body {
   margin: 0;
 }
 
-/* ==================== PROGRESS BAR ==================== */
-
-.progress-bar-background {
-  position: fixed;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  background: linear-gradient(90deg, #ecfdf5 0%, #d1fae5 100%);
-  border-right: 2px solid #10b981;
-  z-index: 0;
-  pointer-events: none;
-}
-
-/* Animation removed as requested */
 
 /* ==================== APP CONTAINER ==================== */
 
@@ -134,12 +133,11 @@ body {
   height: 100vh !important;
   height: 100dvh !important;
   margin: 0 !important;
-  padding: clamp(1rem, 5vh, 4rem) !important;
+  padding: clamp(1rem, 5vh, 4rem) 20px !important;
   display: flex !important;
   flex-direction: column !important;
-  justify-content: center !important;
+  justify-content: space-between !important;
   align-items: center !important;
-  gap: clamp(1rem, 4vh, 3rem) !important;
   overflow: hidden !important;
 }
 
@@ -149,7 +147,21 @@ body {
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  flex-shrink: 0 !important;
+  flex-grow: 1 !important;
+  width: 100% !important;
+}
+
+/* Support for screen-reader/SEO only content */
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border-width: 0 !important;
 }
 
 .timer-display {
@@ -173,27 +185,16 @@ body {
   display: flex !important;
   justify-content: center !important;
   align-items: center !important;
-  gap: 1.5rem !important;
+  gap: 0.5rem !important;
   flex-shrink: 0 !important;
 }
 
 .input-group {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
+  display: none !important;
 }
 
 .input-label {
-  font-size: 0.875rem !important;
-  /* Slightly larger */
-  font-weight: 600 !important;
-  /* Bold for readability */
-  color: #374151 !important;
-  /* Darker grey */
-  margin-bottom: 0.5rem !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.05em !important;
-  display: block !important;
+  display: none !important;
 }
 
 .time-input {
@@ -203,9 +204,7 @@ body {
   font-size: 1.75rem !important;
   font-weight: 600 !important;
   background-color: #ffffff !important;
-  /* White background for maximum contrast inside input */
-  border: 2px solid #e5e7eb !important;
-  /* Light gray border */
+  border: 1.8px solid rgba(0, 0, 0, 0.12) !important;
   border-radius: 0.75rem !important;
   color: #000000 !important;
   transition: all 0.2s !important;
@@ -221,19 +220,17 @@ body {
   font-size: 2.5rem !important;
   font-weight: 600 !important;
   color: #374151 !important;
-  margin-top: 2rem !important;
-  display: block !important;
+  display: flex !important;
+  align-items: center !important;
 }
 
 /* ==================== CONTROLS ==================== */
 
 .controls-section {
   display: flex !important;
-  justify-content: center !important;
+  justify-content: flex-end !important;
   gap: clamp(0.5rem, 2vw, 1rem) !important;
   flex-shrink: 0 !important;
-  width: 100% !important;
-  max-width: 100% !important;
 }
 
 .btn {
@@ -243,7 +240,7 @@ body {
   transition: all 0.2s !important;
   font-size: clamp(0.875rem, 2vh, 1.25rem) !important;
   cursor: pointer !important;
-  border: none !important;
+  border: 1.8px solid rgba(0, 0, 0, 0.12) !important;
   font-family: inherit !important;
   white-space: nowrap !important;
 }
@@ -270,7 +267,6 @@ body {
 
 .btn-secondary {
   background-color: #ffffff !important;
-  border: 2px solid #e5e7eb !important;
   color: #000000 !important;
 }
 
@@ -288,6 +284,7 @@ body {
   padding: 0.5rem 1rem !important;
   border-radius: 2rem !important;
   backdrop-filter: blur(4px) !important;
+  border: 1.8px solid rgba(0, 0, 0, 0.12) !important;
 }
 
 .status-indicator {
@@ -312,6 +309,13 @@ body {
 .status-paused {
   background-color: #d97706 !important;
   /* Darker yellow/orange */
+  animation: pulse 2s infinite !important;
+}
+
+.status-ready {
+  background-color: #f97316 !important;
+  /* Orange-500 */
+  box-shadow: 0 0 10px rgba(249, 115, 22, 0.3) !important;
 }
 
 .status-completed {
@@ -324,19 +328,68 @@ body {
   color: #1f2937 !important;
 }
 
-/* ==================== INFO ==================== */
+/* ==================== FOOTER ==================== */
 
-.info-section {
-  text-align: center !important;
+.footer-section {
+  width: 80% !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  margin-top: auto !important;
+  padding-bottom: 2.5rem !important;
+  z-index: 20 !important;
+}
+
+.footer-divider {
+  width: 100% !important;
+  height: 1px !important;
+  background-color: #e5e7eb !important;
+  margin-bottom: 2rem !important;
+  opacity: 0.5 !important;
+}
+
+.footer-content {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  gap: 2rem !important;
+  width: 100% !important;
+}
+
+.footer-left {
+  display: flex !important;
+  align-items: center !important;
+  flex: 1 !important;
+}
+
+.footer-middle {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex: 1 !important;
+}
+
+.footer-right {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 2rem !important;
+  flex: 1 !important;
+}
+
+.footer-info-text {
   font-size: 0.875rem !important;
   font-weight: 500 !important;
-  color: #4b5563 !important;
-  flex-shrink: 0 !important;
+  color: #6b7280 !important;
+  white-space: nowrap !important;
 }
 
-.info-section p {
-  margin: 0 !important;
+/* ==================== INFO SECTION (DEPRECATED) ==================== */
+
+.info-section {
+  display: none !important;
 }
+
 
 /* ==================== ANIMATIONS ==================== */
 
@@ -368,30 +421,59 @@ input[type="number"] {
 
 /* ==================== RESPONSIVE - MOBILE ==================== */
 
-@media (max-width: 480px) {
-  .app-container {
-    padding: 1rem !important;
-    gap: 1rem !important;
-  }
-
-  .timer-display {
-    font-size: clamp(4rem, min(22vw, 40vh), 10rem) !important;
-  }
-
-  .time-input {
-    width: 4.5rem !important;
-    height: 3.5rem !important;
-    font-size: 1.5rem !important;
+@media (max-width: 1023px) {
+  .footer-section {
+    width: 90% !important;
   }
 }
 
-/* ==================== RESPONSIVE - TABLET ==================== */
+@media (max-width: 768px) {
+  .footer-section {
+    width: 95% !important;
+    padding-bottom: 1.5rem !important;
+  }
 
-@media (min-width: 481px) and (max-width: 1023px) {
+  .footer-content {
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    gap: 1.5rem !important;
+  }
+
   .timer-display {
-    font-size: clamp(8rem, min(22vw, 40vh), 18rem) !important;
+    font-size: clamp(6rem, min(30vw, 45vh), 12rem) !important;
+  }
+
+  .footer-left,
+  .footer-middle,
+  .footer-right {
+    justify-content: center !important;
+    width: 100% !important;
+  }
+
+  .footer-right {
+    flex-direction: column !important;
+    gap: 1.5rem !important;
+  }
+
+  .controls-section {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: center !important;
+    width: 100% !important;
+    gap: 12px !important;
+  }
+
+  .controls-section .btn {
+    flex: 1 !important;
+    width: 100% !important;
+  }
+
+  .footer-info-text {
+    white-space: normal !important;
   }
 }
+
 
 /* ==================== RESPONSIVE - DESKTOP ==================== */
 

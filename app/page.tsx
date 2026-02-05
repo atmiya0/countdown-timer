@@ -3,20 +3,20 @@
 import { useState, useEffect, useRef } from "react";
 import useScreenSize from "@/hooks/use-screen-size";
 import PixelTrail from "@/components/fancy/background/pixel-trail";
+import { Ripple } from "@/components/ui/ripple";
 import confetti from "canvas-confetti";
 
 export default function Home() {
   const screenSize = useScreenSize();
   // Timer input state
-  const [minutes, setMinutes] = useState<number>(5);
-  const [seconds, setSeconds] = useState<number>(0);
+  const [minutes, setMinutes] = useState<number | undefined>(undefined);
+  const [seconds, setSeconds] = useState<number | undefined>(undefined);
 
   // Timer runtime state
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const [totalTime, setTotalTime] = useState<number>(0);
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [hasStarted, setHasStarted] = useState<boolean>(false);
-  const [isResetting, setIsResetting] = useState<boolean>(false);
 
   // Audio refs
   const halfTimeAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -69,17 +69,13 @@ export default function Home() {
     setTimeout(shoot, 200);
   };
 
-  // Calculate progress percentage
-  const getProgress = (): number => {
-    if (!hasStarted || totalTime <= 0) return 0;
-    const elapsed = totalTime - timeLeft;
-    const progress = (elapsed / totalTime) * 100;
-    return Math.max(0, Math.min(100, progress));
-  };
-
   // Start timer
   const startTimer = () => {
-    const total = minutes * 60 + seconds;
+    // Default to 5:00 if both are empty
+    const currentMins = minutes ?? (seconds === undefined ? 5 : 0);
+    const currentSecs = seconds ?? 0;
+    const total = currentMins * 60 + currentSecs;
+
     if (!hasStarted || timeLeft <= 0) {
       if (total <= 0) return;
       setTotalTime(total);
@@ -109,7 +105,6 @@ export default function Home() {
 
   // Reset timer
   const resetTimer = () => {
-    setIsResetting(true);
     setIsRunning(false);
     setHasStarted(false);
     setTimeLeft(0);
@@ -129,11 +124,6 @@ export default function Home() {
       completionAudioRef.current.pause();
       completionAudioRef.current.currentTime = 0;
     }
-
-    // Reset the "resetting" state after the animation completes
-    setTimeout(() => {
-      setIsResetting(false);
-    }, 1000);
   };
 
   // Timer interval effect
@@ -200,30 +190,38 @@ export default function Home() {
 
   // Handle input changes
   const handleMinutesChange = (value: string) => {
-    const num = parseInt(value) || 0;
-    setMinutes(Math.max(0, Math.min(99, num)));
+    if (value === "") {
+      setMinutes(undefined);
+      return;
+    }
+    const num = parseInt(value);
+    if (!isNaN(num)) {
+      setMinutes(Math.max(0, Math.min(99, num)));
+    }
   };
 
   const handleSecondsChange = (value: string) => {
-    const num = parseInt(value) || 0;
-    setSeconds(Math.max(0, Math.min(59, num)));
+    if (value === "") {
+      setSeconds(undefined);
+      return;
+    }
+    const num = parseInt(value);
+    if (!isNaN(num)) {
+      setSeconds(Math.max(0, Math.min(59, num)));
+    }
   };
 
   return (
     <>
-      <div
-        className="progress-bar-background"
-        style={{
-          width: `${getProgress()}%`,
-          transition: isResetting ? "width 1s ease-in-out" : "width 1s linear"
-        }}
-      />
       <main className="app-container">
+        {/* SEO-friendly hidden heading */}
+        <h1 className="sr-only">Professional Countdown Timer with Half-Time Alerts</h1>
         <div className="absolute inset-0 z-[1] overflow-hidden pointer-events-none">
+          <Ripple mainCircleSize={800} numCircles={12} />
           <PixelTrail
             pixelSize={screenSize.lessThan("lg") ? 40 : 64}
             fadeDuration={800}
-            pixelClassName="bg-emerald-600/30"
+            pixelClassName="bg-[#ff5a00]/20"
             className="pointer-events-none"
           />
         </div>
@@ -235,78 +233,92 @@ export default function Home() {
         {/* Timer Display */}
         <div className="timer-section">
           <span className="timer-display">
-            {hasStarted ? formatTime(timeLeft) : formatTime(minutes * 60 + seconds)}
+            {hasStarted ? formatTime(timeLeft) : formatTime((minutes ?? (seconds === undefined ? 5 : 0)) * 60 + (seconds ?? 0))}
           </span>
         </div>
 
-        {/* Time Input (only show when not started) */}
-        {!hasStarted && (
-          <div className="input-section">
-            <div className="input-group">
-              <label className="input-label">Minutes</label>
-              <input
-                type="number"
-                value={minutes}
-                onChange={(e) => handleMinutesChange(e.target.value)}
-                min="0"
-                max="99"
-                className="time-input"
-              />
+        {/* Footer with Divider and Three Columns */}
+        <footer className="footer-section">
+          <div className="footer-divider" />
+          <div className="footer-content">
+            {/* Left Column: Info */}
+            <div className="footer-left">
+              <p className="footer-info-text">
+                Alerts at half-time and on completion
+              </p>
             </div>
-            <span className="input-separator">:</span>
-            <div className="input-group">
-              <label className="input-label">Seconds</label>
-              <input
-                type="number"
-                value={seconds}
-                onChange={(e) => handleSecondsChange(e.target.value)}
-                min="0"
-                max="59"
-                className="time-input"
-              />
+
+            {/* Middle Column: Status indicator */}
+            <div className="footer-middle">
+              <div className="status-section">
+                <div className="status-indicator">
+                  <div className={`status-dot ${!hasStarted ? "status-ready" :
+                    isRunning ? "status-running" :
+                      timeLeft === 0 ? "status-completed" :
+                        "status-paused"
+                    }`} />
+                  <span className="status-text">
+                    {!hasStarted ? "Ready" :
+                      isRunning ? "Running" :
+                        timeLeft === 0 ? "Completed" :
+                          "Paused"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Inputs & Controls */}
+            <div className="footer-right">
+              {/* Time Input (only show when not started) */}
+              {!hasStarted && (
+                <div className="input-section">
+                  <input
+                    type="number"
+                    value={minutes !== undefined ? minutes : ""}
+                    onChange={(e) => handleMinutesChange(e.target.value)}
+                    placeholder="MM"
+                    min="0"
+                    max="99"
+                    className="time-input"
+                  />
+                  <span className="input-separator">:</span>
+                  <input
+                    type="number"
+                    value={seconds !== undefined ? seconds : ""}
+                    onChange={(e) => handleSecondsChange(e.target.value)}
+                    placeholder="SS"
+                    min="0"
+                    max="59"
+                    className="time-input"
+                  />
+                </div>
+              )}
+
+              {/* Controls */}
+              <div className="controls-section">
+                {!isRunning ? (
+                  <button
+                    onClick={startTimer}
+                    disabled={!hasStarted && (minutes === undefined && seconds === undefined) === false && (minutes || 0) + (seconds || 0) === 0}
+                    className="btn btn-primary"
+                  >
+                    {hasStarted && timeLeft > 0 ? "Resume" : "Start"}
+                  </button>
+                ) : (
+                  <button onClick={pauseTimer} className="btn btn-secondary">
+                    Pause
+                  </button>
+                )}
+
+                {hasStarted && (
+                  <button onClick={resetTimer} className="btn btn-secondary">
+                    Reset
+                  </button>
+                )}
+              </div>
             </div>
           </div>
-        )}
-
-        {/* Controls */}
-        <div className="controls-section">
-          {!isRunning ? (
-            <button
-              onClick={startTimer}
-              disabled={!hasStarted && minutes === 0 && seconds === 0}
-              className="btn btn-primary"
-            >
-              {hasStarted && timeLeft > 0 ? "Resume" : "Start"}
-            </button>
-          ) : (
-            <button onClick={pauseTimer} className="btn btn-secondary">
-              Pause
-            </button>
-          )}
-
-          {hasStarted && (
-            <button onClick={resetTimer} className="btn btn-secondary">
-              Reset
-            </button>
-          )}
-        </div>
-
-        {/* Status indicator */}
-        {hasStarted && (
-          <div className="status-section">
-            <div className="status-indicator">
-              <div className={`status-dot ${isRunning ? "status-running" : timeLeft === 0 ? "status-completed" : "status-paused"}`} />
-              <span className="status-text">
-                {timeLeft === 0 ? "Completed" : isRunning ? "Running" : "Paused"}
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* Info */}
-        <div className="info-section">
-          <p>Alerts at half-time and on completion</p>
-        </div>
+        </footer>
       </main>
     </>
   );
