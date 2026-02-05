@@ -95,7 +95,7 @@ export default function Home() {
     // Reset the "resetting" state after the animation completes
     setTimeout(() => {
       setIsResetting(false);
-    }, 2000);
+    }, 1000);
   };
 
   // Timer interval effect
@@ -134,8 +134,8 @@ export default function Home() {
       halfTimeAudioRef.current?.play().catch(() => { });
     }
 
-    // Completion sound alert (starts 3 seconds early)
-    const COMPLETION_SOUND_LEAD_TIME = 3;
+    // Completion sound alert (starts 4 seconds early)
+    const COMPLETION_SOUND_LEAD_TIME = 4;
     if (
       !completionTriggeredRef.current &&
       previousTimeLeftRef.current > COMPLETION_SOUND_LEAD_TIME &&
@@ -171,7 +171,7 @@ export default function Home() {
         className="progress-bar-background"
         style={{
           width: `${getProgress()}%`,
-          transition: isResetting ? "width 2s ease-in-out" : "width 1s linear"
+          transition: isResetting ? "width 1s ease-in-out" : "width 1s linear"
         }}
       />
       <main className="app-container">

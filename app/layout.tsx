@@ -1,9 +1,15 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Google_Sans_Code, Google_Sans } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({
-  variable: "--font-inter",
+const googleSansCode = Google_Sans_Code({
+  variable: "--font-google-sans-code",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
+const googleSans = Google_Sans({
+  variable: "--font-google-sans",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
 });
@@ -20,7 +26,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} antialiased`}>
+      <body className={`${googleSansCode.variable} ${googleSans.variable} antialiased`}>
         {children}
       </body>
     </html>
