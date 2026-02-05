@@ -11,12 +11,32 @@ export default function Home() {
   // Timer input state
   const [minutes, setMinutes] = useState<number | undefined>(undefined);
   const [seconds, setSeconds] = useState<number | undefined>(undefined);
+  const [rounds, setRounds] = useState<number | undefined>(undefined);
 
   // Timer runtime state
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const [totalTime, setTotalTime] = useState<number>(0);
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [hasStarted, setHasStarted] = useState<boolean>(false);
+  const [currentRound, setCurrentRound] = useState<number>(1);
+  const [isBreak, setIsBreak] = useState<boolean>(false);
+  const BREAK_DURATION = 6;
+  const [notifications, setNotifications] = useState<{ id: number; message: string; type: 'info' | 'success' }[]>([]);
+  const notificationIdRef = useRef(0);
+
+  const triggerNotification = (message: string, type: 'info' | 'success' = 'info') => {
+    const id = notificationIdRef.current++;
+    setNotifications(prev => {
+      const next = [...prev, { id, message, type }];
+      // Limit to 3 most recent to prevent overlap/clutter
+      return next.slice(-3);
+    });
+
+    // Auto-remove after 4 seconds
+    setTimeout(() => {
+      setNotifications(prev => prev.filter(n => n.id !== id));
+    }, 4000);
+  };
 
   // Audio refs
   const halfTimeAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -74,6 +94,7 @@ export default function Home() {
     // Default to 5:00 if both are empty
     const currentMins = minutes ?? (seconds === undefined ? 5 : 0);
     const currentSecs = seconds ?? 0;
+    const currentRounds = rounds ?? 1;
     const total = currentMins * 60 + currentSecs;
 
     if (!hasStarted || timeLeft <= 0) {
@@ -81,11 +102,12 @@ export default function Home() {
       setTotalTime(total);
       setTimeLeft(total);
       setHasStarted(true);
+      setCurrentRound(1); // Start from first round
       halfTimeTriggeredRef.current = false;
       completionTriggeredRef.current = false;
     }
 
-    const remaining = !hasStarted || timeLeft <= 0 ? total : timeLeft;
+    const remaining = (!hasStarted || timeLeft <= 0) ? total : timeLeft;
     if (remaining <= 0) return;
     endTimeRef.current = Date.now() + remaining * 1000;
     previousTimeLeftRef.current = remaining;
@@ -109,6 +131,8 @@ export default function Home() {
     setHasStarted(false);
     setTimeLeft(0);
     setTotalTime(0);
+    setCurrentRound(1);
+    setIsBreak(false);
     endTimeRef.current = null;
     previousTimeLeftRef.current = 0;
     halfTimeTriggeredRef.current = false;
@@ -134,19 +158,42 @@ export default function Home() {
       const remaining = Math.max(0, Math.ceil((endTimeRef.current - Date.now()) / 1000));
       setTimeLeft((prev) => (prev === remaining ? prev : remaining));
       if (remaining === 0) {
-        endTimeRef.current = null;
-        setIsRunning(false);
+        if (!isBreak) {
+          if (currentRound < (rounds ?? 1)) {
+            // Start Break & Increment Round
+            triggerNotification(`Round ${currentRound} Complete!`, 'success');
+            setIsBreak(true);
+            setCurrentRound(prev => prev + 1);
+            setTimeLeft(BREAK_DURATION);
+            previousTimeLeftRef.current = BREAK_DURATION;
+            endTimeRef.current = Date.now() + BREAK_DURATION * 1000;
+            completionAudioRef.current?.play().catch(() => { });
+          } else {
+            // Final Completion
+            endTimeRef.current = null;
+            setIsRunning(false);
+          }
+        } else {
+          // End Break, Start Work for the incremented round
+          setIsBreak(false);
+          setTimeLeft(totalTime);
+          previousTimeLeftRef.current = totalTime;
+          endTimeRef.current = Date.now() + totalTime * 1000;
+          halfTimeTriggeredRef.current = false;
+          completionTriggeredRef.current = false;
+          triggerNotification(`Round ${currentRound} Start!`, 'info');
+        }
       }
     };
 
     tick();
     const interval = setInterval(tick, 250);
     return () => clearInterval(interval);
-  }, [isRunning]);
+  }, [isRunning, isBreak, currentRound, rounds, totalTime]);
 
   // Handle completion and checkpoints
   useEffect(() => {
-    if (!hasStarted) return;
+    if (!hasStarted || isBreak) return;
 
     if (totalTime <= 0) return;
 
@@ -160,6 +207,7 @@ export default function Home() {
     ) {
       halfTimeTriggeredRef.current = true;
       halfTimeAudioRef.current?.play().catch(() => { });
+      triggerNotification("Half Time!", 'info');
     }
 
     // Completion sound alert (starts 4 seconds early)
@@ -171,22 +219,28 @@ export default function Home() {
     ) {
       completionTriggeredRef.current = true;
       completionAudioRef.current?.play().catch(() => { });
+      if (currentRound >= (rounds ?? 1)) {
+        triggerNotification("Completing Session...", 'info');
+      }
     }
 
-    // Zero reaching alert - Confetti burst
-    if (timeLeft <= 0 && !confettiTriggeredRef.current) {
-      confettiTriggeredRef.current = true;
-      triggerConfetti();
-    }
+    // Zero reaching alert (Final round)
+    if (timeLeft <= 0 && currentRound >= (rounds ?? 1)) {
+      // Final completion - Confetti burst
+      if (!confettiTriggeredRef.current) {
+        confettiTriggeredRef.current = true;
+        triggerConfetti();
+        triggerNotification("Session Complete!", 'success');
+      }
 
-    // Zero reaching fallback for audio (in case lead time trigger was missed)
-    if (timeLeft <= 0 && !completionTriggeredRef.current) {
-      completionTriggeredRef.current = true;
-      completionAudioRef.current?.play().catch(() => { });
+      if (!completionTriggeredRef.current) {
+        completionTriggeredRef.current = true;
+        completionAudioRef.current?.play().catch(() => { });
+      }
     }
 
     previousTimeLeftRef.current = timeLeft;
-  }, [timeLeft, hasStarted, totalTime]);
+  }, [timeLeft, hasStarted, totalTime, currentRound, rounds]);
 
   // Handle input changes
   const handleMinutesChange = (value: string) => {
@@ -211,11 +265,23 @@ export default function Home() {
     }
   };
 
+  const handleRoundsChange = (value: string) => {
+    if (value === "") {
+      setRounds(undefined);
+      return;
+    }
+    const num = parseInt(value);
+    if (!isNaN(num)) {
+      setRounds(Math.max(1, Math.min(99, num)));
+    }
+  };
+
   return (
     <>
       <main className="app-container">
         {/* SEO-friendly hidden heading */}
         <h1 className="sr-only">Professional Countdown Timer with Half-Time Alerts</h1>
+
         <div className="absolute inset-0 z-[1] overflow-hidden pointer-events-none">
           <Ripple mainCircleSize={800} numCircles={12} />
           <PixelTrail
@@ -226,100 +292,119 @@ export default function Home() {
           />
         </div>
 
+        {/* Top Status Pill */}
+        <div className="absolute top-[clamp(1rem,4vh,3rem)] left-1/2 -translate-x-1/2 z-[20]">
+          <div className="status-section max-w-[90vw] whitespace-nowrap overflow-hidden">
+            <div className={`status-dot shrink-0 ${!hasStarted ? "status-ready" :
+              isRunning ? "status-running" :
+                timeLeft === 0 ? "status-completed" :
+                  "status-paused"
+              }`} />
+            <span className="status-text lowercase truncate">
+              {!hasStarted ? "ready" :
+                isBreak ? "next round starts in" :
+                  isRunning ? "running" :
+                    timeLeft === 0 ? "completed" :
+                      "paused"}
+            </span>
+            <div className="status-separator shrink-0" />
+            <span className="status-text truncate">
+              round {currentRound} of {rounds ?? 1}
+            </span>
+          </div>
+        </div>
+
         {/* Audio elements */}
         <audio ref={halfTimeAudioRef} src="/sounds/halftime-sound.mp3" preload="auto" />
         <audio ref={completionAudioRef} src="/sounds/completion-sound.mp3" preload="auto" />
 
-        {/* Timer Display */}
-        <div className="timer-section">
-          <span className="timer-display">
-            {hasStarted ? formatTime(timeLeft) : formatTime((minutes ?? (seconds === undefined ? 5 : 0)) * 60 + (seconds ?? 0))}
-          </span>
+        {/* Center UI: Timer Display */}
+        <div className="flex flex-grow items-center justify-center z-10 w-full">
+          <div className="timer-section -translate-y-16">
+            <span className={`timer-display ${isBreak ? 'timer-break' : ''}`}>
+              {hasStarted ? formatTime(timeLeft) : formatTime((minutes ?? (seconds === undefined ? 5 : 0)) * 60 + (seconds ?? 0))}
+            </span>
+          </div>
         </div>
 
-        {/* Footer with Divider and Three Columns */}
-        <footer className="footer-section">
-          <div className="footer-divider" />
-          <div className="footer-content">
-            {/* Left Column: Info */}
-            <div className="footer-left">
-              <p className="footer-info-text">
-                Alerts at half-time and on completion
-              </p>
+        <div className="absolute bottom-[clamp(2rem,6vh,4rem)] left-1/2 -translate-x-1/2 flex flex-col items-center gap-6 z-[20] w-full max-w-[min(95vw,1200px)]">
+          {/* Time Input (only show when not started) */}
+          {!hasStarted && (
+            <div className="input-section flex-wrap md:flex-nowrap px-4 justify-center">
+              <input
+                type="number"
+                value={minutes !== undefined ? minutes : ""}
+                onChange={(e) => handleMinutesChange(e.target.value)}
+                placeholder="MM"
+                min="0"
+                max="99"
+                className="time-input w-[100px] sm:w-[140px] md:w-[180px]"
+              />
+              <span className="input-separator">:</span>
+              <input
+                type="number"
+                value={seconds !== undefined ? seconds : ""}
+                onChange={(e) => handleSecondsChange(e.target.value)}
+                placeholder="SS"
+                min="0"
+                max="59"
+                className="time-input w-[100px] sm:w-[140px] md:w-[180px]"
+              />
+              <span className="input-separator mx-1">/</span>
+              <input
+                type="number"
+                value={rounds !== undefined ? rounds : ""}
+                onChange={(e) => handleRoundsChange(e.target.value)}
+                placeholder="rounds"
+                min="1"
+                max="99"
+                className="time-input w-[140px] sm:w-[200px] md:w-[280px]"
+              />
             </div>
+          )}
 
-            {/* Middle Column: Status indicator */}
-            <div className="footer-middle">
-              <div className="status-section">
-                <div className="status-indicator">
-                  <div className={`status-dot ${!hasStarted ? "status-ready" :
-                    isRunning ? "status-running" :
-                      timeLeft === 0 ? "status-completed" :
-                        "status-paused"
-                    }`} />
-                  <span className="status-text">
-                    {!hasStarted ? "Ready" :
-                      isRunning ? "Running" :
-                        timeLeft === 0 ? "Completed" :
-                          "Paused"}
-                  </span>
-                </div>
-              </div>
-            </div>
+          <div className="controls-section mt-2">
+            {hasStarted && (
+              <button onClick={resetTimer} className="btn btn-secondary btn-reset">
+                Reset
+              </button>
+            )}
 
-            {/* Right Column: Inputs & Controls */}
-            <div className="footer-right">
-              {/* Time Input (only show when not started) */}
-              {!hasStarted && (
-                <div className="input-section">
-                  <input
-                    type="number"
-                    value={minutes !== undefined ? minutes : ""}
-                    onChange={(e) => handleMinutesChange(e.target.value)}
-                    placeholder="MM"
-                    min="0"
-                    max="99"
-                    className="time-input"
-                  />
-                  <span className="input-separator">:</span>
-                  <input
-                    type="number"
-                    value={seconds !== undefined ? seconds : ""}
-                    onChange={(e) => handleSecondsChange(e.target.value)}
-                    placeholder="SS"
-                    min="0"
-                    max="59"
-                    className="time-input"
-                  />
-                </div>
-              )}
-
-              {/* Controls */}
-              <div className="controls-section">
-                {!isRunning ? (
-                  <button
-                    onClick={startTimer}
-                    disabled={!hasStarted && (minutes === undefined && seconds === undefined) === false && (minutes || 0) + (seconds || 0) === 0}
-                    className="btn btn-primary"
-                  >
-                    {hasStarted && timeLeft > 0 ? "Resume" : "Start"}
-                  </button>
-                ) : (
-                  <button onClick={pauseTimer} className="btn btn-secondary">
-                    Pause
-                  </button>
-                )}
-
-                {hasStarted && (
-                  <button onClick={resetTimer} className="btn btn-secondary">
-                    Reset
-                  </button>
-                )}
-              </div>
-            </div>
+            {!isRunning ? (
+              <button
+                onClick={startTimer}
+                disabled={!hasStarted && (minutes === undefined && seconds === undefined) === false && (minutes || 0) + (seconds || 0) === 0}
+                className="btn btn-primary btn-action"
+              >
+                {hasStarted && timeLeft > 0 ? "Resume" : "Start"}
+              </button>
+            ) : (
+              <button onClick={pauseTimer} className="btn btn-secondary btn-action">
+                Pause
+              </button>
+            )}
           </div>
-        </footer>
-      </main>
+
+          {/* Info Text */}
+          <p className="footer-info-text opacity-60">
+            Alerts at half-time and on completion
+          </p>
+        </div>
+
+        {/* Notifications Container */}
+        <div className="notification-container">
+          {notifications.map((n) => (
+            <div key={n.id} className={`notification-toast type-${n.type}`}>
+              <span className="notification-icon shrink-0">
+                {n.type === 'success' ? '✨' : '⏰'}
+              </span>
+              <span className="flex-1 min-w-0 break-words line-clamp-2">
+                {n.message}
+              </span>
+            </div>
+          ))}
+        </div>
+      </main >
     </>
   );
 }

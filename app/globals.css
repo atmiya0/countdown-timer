@@ -136,7 +136,7 @@ body {
   padding: clamp(1rem, 5vh, 4rem) 20px !important;
   display: flex !important;
   flex-direction: column !important;
-  justify-content: space-between !important;
+  justify-content: center !important;
   align-items: center !important;
   overflow: hidden !important;
 }
@@ -147,7 +147,6 @@ body {
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  flex-grow: 1 !important;
   width: 100% !important;
 }
 
@@ -179,6 +178,10 @@ body {
   transition: font-size 0.2s ease-out !important;
 }
 
+.timer-display.timer-break {
+  color: #f1782e !important;
+}
+
 /* ==================== INPUT SECTION ==================== */
 
 .input-section {
@@ -198,7 +201,6 @@ body {
 }
 
 .time-input {
-  width: 5.5rem !important;
   height: 4rem !important;
   text-align: center !important;
   font-size: 1.75rem !important;
@@ -228,7 +230,7 @@ body {
 
 .controls-section {
   display: flex !important;
-  justify-content: flex-end !important;
+  justify-content: center !important;
   gap: clamp(0.5rem, 2vw, 1rem) !important;
   flex-shrink: 0 !important;
 }
@@ -243,6 +245,14 @@ body {
   border: 1.8px solid rgba(0, 0, 0, 0.12) !important;
   font-family: inherit !important;
   white-space: nowrap !important;
+}
+
+.btn-action {
+  min-width: clamp(140px, 20vw, 220px) !important;
+}
+
+.btn-reset {
+  min-width: clamp(100px, 15vw, 140px) !important;
 }
 
 .btn-primary {
@@ -280,18 +290,24 @@ body {
 .status-section {
   text-align: center !important;
   flex-shrink: 0 !important;
-  background: rgba(255, 255, 255, 0.5) !important;
-  padding: 0.5rem 1rem !important;
+  background: rgba(255, 255, 255, 0.4) !important;
+  padding: 0.5rem 1.5rem !important;
   border-radius: 2rem !important;
-  backdrop-filter: blur(4px) !important;
-  border: 1.8px solid rgba(0, 0, 0, 0.12) !important;
-}
-
-.status-indicator {
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   gap: 0.75rem !important;
+}
+
+.status-separator {
+  width: 1px !important;
+  align-self: stretch !important;
+  background-color: rgba(255, 255, 255, 0.4) !important;
+  margin: -0.5rem 0.5rem !important;
 }
 
 .status-dot {
@@ -361,12 +377,7 @@ body {
   flex: 1 !important;
 }
 
-.footer-middle {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  flex: 1 !important;
-}
+
 
 .footer-right {
   display: flex !important;
@@ -421,59 +432,32 @@ input[type="number"] {
 
 /* ==================== RESPONSIVE - MOBILE ==================== */
 
-@media (max-width: 1023px) {
-  .footer-section {
-    width: 90% !important;
-  }
-}
-
 @media (max-width: 768px) {
-  .footer-section {
-    width: 95% !important;
-    padding-bottom: 1.5rem !important;
-  }
-
-  .footer-content {
-    flex-direction: column !important;
-    align-items: center !important;
-    text-align: center !important;
-    gap: 1.5rem !important;
-  }
-
   .timer-display {
-    font-size: clamp(6rem, min(30vw, 45vh), 12rem) !important;
+    font-size: clamp(7rem, 35vw, 16rem) !important;
   }
 
-  .footer-left,
-  .footer-middle,
-  .footer-right {
-    justify-content: center !important;
-    width: 100% !important;
+  .time-input {
+    height: 3.5rem !important;
+    font-size: 1.5rem !important;
+    border-radius: 0.5rem !important;
   }
 
-  .footer-right {
-    flex-direction: column !important;
-    gap: 1.5rem !important;
+  .input-separator {
+    font-size: 1.75rem !important;
   }
 
   .controls-section {
-    display: flex !important;
-    flex-direction: row !important;
-    justify-content: center !important;
     width: 100% !important;
-    gap: 12px !important;
+    padding: 0 1rem !important;
   }
 
   .controls-section .btn {
     flex: 1 !important;
-    width: 100% !important;
-  }
-
-  .footer-info-text {
-    white-space: normal !important;
+    height: 3.5rem !important;
+    font-size: 1.1rem !important;
   }
 }
-
 
 /* ==================== RESPONSIVE - DESKTOP ==================== */
 
@@ -483,31 +467,49 @@ input[type="number"] {
   }
 }
 
-/* ==================== LANDSCAPE MOBILE ==================== */
+/* ==================== SHORT SCREENS & LANDSCAPE ==================== */
 
-@media (max-height: 500px) and (orientation: landscape) {
+@media (max-height: 700px) {
   .app-container {
-    padding: 0.5rem !important;
-    gap: 0.5rem !important;
+    padding-top: 2rem !important;
+    padding-bottom: 2rem !important;
+  }
+
+  .timer-section {
+    transform: translateY(-2rem) !important;
+  }
+}
+
+@media (max-height: 500px) {
+  .app-container {
+    padding: 1rem !important;
+    justify-content: center !important;
+  }
+
+  .timer-section {
+    transform: translateY(0) !important;
   }
 
   .timer-display {
-    font-size: min(25vw, 60vh) !important;
+    font-size: min(35vw, 70vh) !important;
   }
 
   .time-input {
-    height: 3rem !important;
-    width: 4rem !important;
-    font-size: 1.25rem !important;
+    height: 2.75rem !important;
+    font-size: 1.1rem !important;
   }
 
-  .input-label {
-    font-size: 0.75rem !important;
-    margin-bottom: 0.25rem !important;
+  .input-section {
+    gap: 0.25rem !important;
   }
 
   .input-separator {
-    margin-top: 1rem !important;
+    font-size: 1.25rem !important;
+  }
+
+  .status-section {
+    top: 0.5rem !important;
+    padding: 0.25rem 1rem !important;
   }
 }
 
@@ -553,4 +555,70 @@ input[type="number"] {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* ==================== NOTIFICATIONS ==================== */
+
+.notification-container {
+  position: fixed !important;
+  top: clamp(1rem, 3vh, 1.5rem) !important;
+  right: clamp(1rem, 3vw, 1.5rem) !important;
+  z-index: 100 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.75rem !important;
+  pointer-events: none !important;
+  width: auto !important;
+  max-width: calc(100vw - 2rem) !important;
+}
+
+.notification-toast {
+  background: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1.5px solid rgba(0, 0, 0, 0.08) !important;
+  padding: 0.75rem 1.25rem !important;
+  border-radius: 0.6rem !important;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12) !important;
+  color: #1f2937 !important;
+  font-weight: 600 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+  animation: toastFlow 4s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+  pointer-events: auto !important;
+  min-width: 240px !important;
+  max-width: 380px !important;
+  height: auto !important;
+  flex-shrink: 0 !important;
+}
+
+.notification-toast.type-success {}
+
+.notification-toast.type-info {}
+
+@keyframes toastFlow {
+  0% {
+    transform: translate(40px, -20px) !important;
+    opacity: 0 !important;
+  }
+
+  15% {
+    transform: translate(0, 0) !important;
+    opacity: 1 !important;
+  }
+
+  85% {
+    transform: translate(0, 0) !important;
+    opacity: 1 !important;
+  }
+
+  100% {
+    transform: translate(40px, -20px) !important;
+    opacity: 0 !important;
+  }
+}
+
+.notification-icon {
+  font-size: 1.25rem !important;
 }
