@@ -43,6 +43,10 @@ next-env.d.ts
 Thumbs.db
 *.local
 
+# local cache
+.npm_local_cache/
+.npm/
+
 # editors
 .vscode/
 .idea/
@@ -53,3 +57,4 @@ Thumbs.db
 *.sw?
 .agent/
 .antigravity/
+.gemini/

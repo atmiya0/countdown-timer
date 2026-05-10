@@ -1,0 +1,63 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --accent: oklch(0.97 0 0);
+  --accent-hover: #1d4ed8;
+  --muted: oklch(0.97 0 0);
+  --card: oklch(1 0 0);
+  --border: oklch(0.922 0 0);
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+}
+
+@theme inline {
+  --font-sans: "Google Sans", var(--font-inter), system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+}
+
+/* ==================== BASE STYLES ==================== */
+
+body {
+  background-color: #ffffff;
+  color: #000000;
+  font-family: "Google Sans", var(--font-inter), system-ui, sans-serif;
+  font-weight: 500;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.timer-display {
+  font-family: "Google Sans", var(--font-inter), system-ui, sans-serif !important;
+  font-variant-numeric: tabular-nums !important;
+  letter-spacing: -0.02em !important;
+  font-weight: 500 !important;
+  color: #000000 !important;
+  font-size: clamp(4rem, min(22vw, 40vh), 25rem) !important;
+  line-height: 0.9 !important;
+  white-space: nowrap !important;
+  display: block !important;
+  text-align: center !important;
+  transition: font-size 0.2s ease-out !important;
+}
+
+/* ... rest of the file ... */

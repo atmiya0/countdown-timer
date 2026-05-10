@@ -1,17 +1,19 @@
 import type { Metadata } from "next";
-import { Google_Sans_Code, Google_Sans } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const googleSansCode = Google_Sans_Code({
-  variable: "--font-google-sans-code",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700", "800"],
+  display: "swap",
 });
 
-const googleSans = Google_Sans({
-  variable: "--font-google-sans",
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -45,7 +47,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${googleSansCode.variable} ${googleSans.variable} antialiased`}>
+      <body className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}>
         {children}
       </body>
     </html>
